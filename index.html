@@ -3,41 +3,100 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>QR Generator — Static</title>
+  <title>QR Generator — Enhanced</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="container">
     <h1>QR Code Generator</h1>
-    <p>Enter a URL and get a downloadable QR code you can scan with your phone.</p>
+    <p class="lead">Enter text or a URL. The preview can auto-update. Choose size, colors, error correction level, and download as PNG or SVG.</p>
 
-    <label for="urlInput">URL</label>
-    <div class="row">
-      <input id="urlInput" type="url" placeholder="https://example.com" aria-label="URL to encode" />
-      <!-- make explicit it's not a submit button -->
-      <button id="generateBtn" type="button">Generate</button>
+    <div class="controls-grid">
+      <div class="field wide">
+        <label for="textInput">Text / URL</label>
+        <textarea id="textInput" placeholder="https://example.com" rows="2"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="sizeRange">Size <span id="sizeLabel">512</span> px</label>
+        <input id="sizeRange" type="range" min="128" max="1024" value="512" />
+      </div>
+
+      <div class="field">
+        <label for="eccSelect">Error correction</label>
+        <select id="eccSelect">
+          <option value="L">L (7%)</option>
+          <option value="M" selected>M (15%)</option>
+          <option value="Q">Q (25%)</option>
+          <option value="H">H (30%)</option>
+        </select>
+      </div>
+
+      <div class="field colors">
+        <label>Colors</label>
+        <div class="color-row">
+          <label>Foreground <input id="fgColor" type="color" value="#111111" /></label>
+          <label>Background <input id="bgColor" type="color" value="#ffffff" /></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="formatSelect">Format</label>
+        <select id="formatSelect">
+          <option value="png" selected>PNG (data URL)</option>
+          <option value="svg">SVG (inline)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>&nbsp;</label>
+        <div class="small-controls">
+          <label><input id="autoGen" type="checkbox" checked /> Auto-generate</label>
+          <button id="generateBtn" type="button">Generate</button>
+        </div>
+      </div>
     </div>
 
-    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+    <div id="status" class="msg" role="status" aria-live="polite"></div>
 
-    <div id="output" class="output" hidden>
-      <h2>Result</h2>
-      <div class="preview">
-        <img id="qrImage" alt="Generated QR code" />
+    <section class="preview-area">
+      <div id="previewHolder" class="preview-holder">
+        <div id="svgContainer" class="svg-container" aria-hidden="true"></div>
+        <img id="pngPreview" alt="Generated QR code" />
       </div>
-      <div class="controls">
-        <a id="downloadBtn" class="button" download="qrcode.png">Download PNG</a>
-        <button id="copyDataBtn" class="button">Copy data URL</button>
+
+      <div class="actions">
+        <a id="downloadBtn" class="button" download="qrcode.png">Download</a>
+        <button id="copyBtn" class="button">Copy image</button>
+        <button id="copyDataUrlBtn" class="button">Copy data URL</button>
       </div>
-    </div>
+    </section>
 
     <footer>
-      <p>Tip: Try the example URL <code>https://example.com</code> — scan with your phone to test.</p>
+      <p>Tip: Use <code>https://example.com</code> as a sample. If the QR library fails to load, serve the page with a simple HTTP server or check DevTools (Network/Console).</p>
     </footer>
   </main>
 
-  <!-- QR code library (browser build) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <!-- Prefer local bundled library; fallback to CDN if local missing -->
+  <script>
+    (function(){
+      var local = 'qrcode.min.js';
+      function tryLoad(src){
+        var s=document.createElement('script');
+        s.src=src; s.async=false;
+        s.onload=function(){console.log('Loaded', src)};
+        s.onerror=function(){console.error('Failed to load', src)};
+        document.head.appendChild(s);
+      }
+      // Try local first, then CDN fallback if library not defined after a short delay
+      tryLoad(local);
+      setTimeout(function(){
+        if(typeof QRCode==='undefined'){
+          tryLoad('https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js');
+        }
+      }, 200);
+    })();
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
